@@ -1,38 +1,52 @@
 import streamlit as st
-import pandas as pd
+import pickle 
+import string
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
 
-st.title("This is a Title")
+ps = PorterStemmer()
+
+tfidf = pickle.load(open("vectorizer.pkl","rb"))
+model = pickle.load(open("model.pkl","rb"))
+
+st.title("SMS  Spam Classifier")
+
+input_sms = st.text_area("Enter a message")
+
+def transform_text(text):
+    text = text.lower()
+    text = nltk.word_tokenize(text)
+    y = []
+    for i in text:
+        if i.isalnum():
+            y.append(i)
+    text = y[:]
+    y.clear()
+
+    for i in text:
+        if i not in stopwords.words("english") and i not in string.punctuation:
+            y.append(i)
+        
+    text = y[:]
+    y.clear()
+
+    for i in text:
+      y.append(ps.stem(i))
+           
+    return " ".join(y)
+
+if st.button("Predict"):
+    transformed_sms = transform_text(input_sms)
+    
+    vector_input = tfidf.transform([transformed_sms])
+    
+    result = model.predict(vector_input)[0]
+    
+    if result == 1:
+        st.header("Spam")
+    else:
+        st.header("Not Spam")
 
 
-col1,col2,col3 = st.columns(3)
-with col1:
-    name = st.text_input(" Name")
-with col2:
-    age = st.number_input("Enter a age ")
-with col3:
-    slide = st.slider("Wicket",0,10)
 
-if st.button("Click me"):
-    pass
-gender_list = ["male","Female","other"]
-st.selectbox("select gender",sorted(gender_list))
-
-nre = st.text("new langauage")
-if st.checkbox("multiple check you can do "):
-    st.write("good moring")
-
-age = st.slider("slide and give number",0,100)
-
-st.sidebar.title("good moringh")
-st.radio("i am radio",["you","we","us"])
-
-optin = st.sidebar.radio("radio tune ",[23,45,56,"name"])
-
-col5,co7,col9 = st.sidebar.columns(3)
-
-with col5:
-    st.slider("slide you want",0,80,30)
-with co7:
-    st.sidebar.text_input("name you want")
-with col9:
-    inp = st.number_input("entr a number")
